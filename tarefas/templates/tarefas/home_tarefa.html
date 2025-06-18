@@ -128,6 +128,50 @@
         .delete-form input[type="submit"]:hover {
             background-color: #c62828;
         }
+
+        .mensagem {
+        background-color: #d4edda;
+        border-left: 5px solid #28a745;
+        padding: 10px 16px;
+        margin: 10px 0;
+        border-radius: 5px;
+        font-weight: bold;
+        color: #155724;
+        }
+
+        .usuario-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background-color: #ffffff;
+        padding: 10px 16px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        font-size: 14px;
+        color: #333;
+        }
+
+        .usuario-info p {
+        margin: 0;
+        font-weight: bold;
+        color: #333;
+        }
+
+        .logout-btn {
+        background-color: #e53935;
+        color: white;
+        border: none;
+        padding: 8px 14px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background-color 0.3s ease;
+        }
+
+        .logout-btn:hover {
+        background-color: #c62828;
+        }
+
     </style>
 </head>
 <body>
@@ -135,12 +179,14 @@
     <div class="top-bar">
         <h1>Lista de Tarefas</h1>
         <a href="{% url 'criar_tarefa' %}" class="btn-criar">+ Criar Tarefa</a>
-        {% if request.user.is_authenticated  %}
-        <p>Olá {{ request.user.username }} Seja bem vindo!</p>
-           <form method="post" action="{% url 'logout' %}">
-                {% csrf_token %}
-                <button type="submit">Sair</button>
-            </form>
+        {% if request.user.is_authenticated %}
+        <div class="usuario-info">
+            <p>Olá, {{ request.user.username }} Seja Bem vindo(a)👋</p>
+        <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="logout-btn">Sair</button>
+        </form>
+        </div>
         {% endif %}
     </div>
 
@@ -166,7 +212,14 @@
         <button type="submit">Filtrar</button>
     </form>
 
-    <ul>
+{% if messages %}
+    <div id="mensagens">
+        {% for message in messages %}
+            <div class="mensagem">{{ message }}</div>
+        {% endfor %}
+    </div>
+{% endif %}
+
         {% for task in tarefas %}
             <div class="tarefa">
                 <a href="{% url 'update_tarefa' task.id %}">{{ task.titulo }}</a>
@@ -179,6 +232,16 @@
             <p style="text-align:center;">Nenhuma tarefa cadastrada ainda.</p>
         {% endfor %}
     </ul>
+
+
+    <script>
+        setTimeout(function() {
+            const mensagens = document.getElementById('mensagens');
+            if (mensagens) {
+                mensagens.style.display = 'none';
+            }
+        }, 5000);
+    </script>
 
 </body>
 </html>

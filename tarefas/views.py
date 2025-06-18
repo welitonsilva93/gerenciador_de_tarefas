@@ -4,6 +4,7 @@ from django.urls import reverse
 from . models import Tarefas, Categoria
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 
 def ver_tarefa(request):
     categoria_id = request.GET.get('categoria')
@@ -36,8 +37,9 @@ def criar_tarefa(request):
             tarefa = form.save(commit=False)
             tarefa.usuario = request.user
             tarefa.save()
+            messages.success(request, "Tarefa criada com sucesso!")
             return redirect(reverse('ver_tarefa'))
-        
+
     else:
         form = FormularioTarefa()
 
@@ -48,6 +50,7 @@ def delete_tarefa(request, i):
     task_tarefas = Tarefas.objects.get(id=i)
 
     task_tarefas.delete()
+    messages.success(request, "Tarefa removida com sucesso!")
     return redirect(reverse('ver_tarefa'))
 
 @login_required
@@ -59,6 +62,7 @@ def update_tarefa(request, id):
 
         if form.is_valid():
             form.save()
+            messages.success(request, "Tarefa atualizada com sucesso!")
             return redirect('ver_tarefa')
         
     else:
