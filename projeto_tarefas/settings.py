@@ -64,10 +64,15 @@ WSGI_APPLICATION = 'projeto_tarefas.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'banco_tarefas',
+        'USER': 'user_tarefas',
+        'PASSWORD': 'senha_tarefas',
+        'HOST': 'localhost',  # ou 'db' se seu Django também estiver em Docker
+        'PORT': '5433',
     }
 }
+
 
 
 # Password validation
@@ -92,9 +97,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'pt-br'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Sao_Paulo'
 
 USE_I18N = True
 
