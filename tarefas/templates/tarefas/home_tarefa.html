@@ -80,7 +80,7 @@
             background-color: #005fa3;
         }
 
-        .tarefa {
+        .lista-tarefas {
             background-color: #fff;
             border: 1px solid #ddd;
             padding: 16px 24px;
@@ -95,19 +95,19 @@
             transition: transform 0.2s ease;
         }
 
-        .tarefa:hover {
+        .lista-tarefas:hover {
             transform: scale(1.01);
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
 
-        .tarefa a {
+        .lista-tarefas a {
             text-decoration: none;
             color: #0077cc;
             font-size: 18px;
             font-weight: bold;
         }
 
-        .tarefa a:hover {
+        .lista-tarefas a:hover {
             text-decoration: underline;
         }
 
@@ -220,18 +220,9 @@
     </div>
 {% endif %}
 
-        {% for task in tarefas %}
-            <div class="tarefa">
-                <a href="{% url 'update_tarefa' task.id %}">{{ task.titulo }}</a>
-                <form class="delete-form" action="/delete_tarefa/{{ task.id }}/" method="post">
-                    {% csrf_token %}
-                    <input type="submit" value="Deletar">
-                </form>
-            </div>
-        {% empty %}
-            <p style="text-align:center;">Nenhuma tarefa cadastrada ainda.</p>
-        {% endfor %}
+        <div id="lista-tarefas"></div>
     </ul>
+
 
 
     <script>
@@ -241,6 +232,83 @@
                 mensagens.style.display = 'none';
             }
         }, 5000);
+
+        setTimeout(function () {
+            const mensagens = document.getElementById('mensagens');
+            if (mensagens) mensagens.style.display = 'none';
+        }, 5000);
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const container = document.getElementById('lista-tarefas');
+
+                fetch('api/tarefas/', {
+                    method: 'GET',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length === 0) {
+                        container.innerHTML = `<p style="text-align:center;">Nenhuma tarefa cadastrada ainda.</p>`;
+                    } else {
+                        data.forEach(task => {
+                            const div = document.createElement('div');
+                            div.classList.add('lista-tarefas');
+
+                            const link = document.createElement('a');
+                            link.href = `/update_tarefa/${task.id}/`;
+                            link.textContent = task.titulo;
+
+                            const deleteForm = document.createElement('form');
+                            deleteForm.classList.add('delete-form');
+
+                            const deleteBtn = document.createElement('input');
+                            deleteBtn.type = 'submit';
+                            deleteBtn.value = 'Deletar';
+
+                            deleteForm.appendChild(deleteBtn);
+                            deleteForm.addEventListener('submit', function (e) {
+                                e.preventDefault();
+                                fetch(`api/tarefas/${task.id}/`, {
+                                    method: 'DELETE',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRFToken': getCookie('csrftoken')
+                                    }
+                                }).then(res => {
+                                    if (res.ok) {
+                                        div.remove();
+                                        alert('Tarefa Deletada com sucesso!');
+                                    } else {
+                                        alert('Erro ao deletar a tarefa');
+                                    }
+                                });
+                            });
+
+                            div.appendChild(link);
+                            div.appendChild(deleteForm);
+                            container.appendChild(div);
+                        });
+                    }
+                });
+
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+        });
     </script>
 
 </body>

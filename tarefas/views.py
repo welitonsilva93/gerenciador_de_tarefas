@@ -5,7 +5,17 @@ from . models import Tarefas, Categoria
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from rest_framework.permissions import IsAuthenticated
 
+from rest_framework import viewsets
+from .serializers import TarefaSerializer
+
+class TarefaViewSet(viewsets.ModelViewSet):
+    queryset = Tarefas.objects.all()
+    serializer_class = TarefaSerializer
+    permission_classes = [IsAuthenticated]
+
+@login_required
 def ver_tarefa(request):
     categoria_id = request.GET.get('categoria')
     usuario_id = request.GET.get('usuario')
@@ -69,3 +79,5 @@ def update_tarefa(request, id):
         form = FormularioTarefa(instance=task_tarefas)
 
     return render(request, 'tarefas/editar_tarefa.html', {'form': form})
+
+
