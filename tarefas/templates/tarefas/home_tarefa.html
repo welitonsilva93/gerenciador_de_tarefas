@@ -202,7 +202,7 @@
 
         <select name="usuario">
             <option value="">-- Usuários --</option>
-            {% for usuario in usuario %}
+            {% for usuario in usuarios %}
                 <option value="{{ usuario.id }}"{% if usuario.id|stringformat:"s" == usuario_selecionado %} selected{% endif %}>
                     {{ usuario.username }}
                 </option>
@@ -241,7 +241,20 @@
         document.addEventListener('DOMContentLoaded', function () {
             const container = document.getElementById('lista-tarefas');
 
-                fetch('api/tarefas/', {
+                    // Pega os parâmetros da URL atual (categoria e usuario)
+                    const params = new URLSearchParams(window.location.search);
+                    const categoria = params.get('categoria');
+                    const usuario = params.get('usuario');
+
+                    let apiUrl = '/api/tarefas/';
+
+                    if (categoria || usuario) {
+                        apiUrl += '?';
+                        if (categoria) apiUrl += `categoria=${categoria}&`;
+                        if (usuario) apiUrl += `usuario=${usuario}`;
+                    }
+
+                    fetch(apiUrl, {
                     method: 'GET',
                     headers: {
                         'X-CSRFToken': getCookie('csrftoken'),

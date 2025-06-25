@@ -6,3 +6,9 @@ class TarefaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tarefas
         fields = '__all__'
+
+class CategoriaSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Categoria
+        fields = '__all__'

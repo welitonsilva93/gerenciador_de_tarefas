@@ -1,11 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import FormularioTarefa
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from . models import Tarefas, Categoria
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from rest_framework.permissions import IsAuthenticated
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic.edit import CreateView, DeleteView
+from django.views.generic import ListView
 
 from rest_framework import viewsets
 from .serializers import TarefaSerializer
@@ -15,53 +18,70 @@ class TarefaViewSet(viewsets.ModelViewSet):
     serializer_class = TarefaSerializer
     permission_classes = [IsAuthenticated]
 
-@login_required
-def ver_tarefa(request):
-    categoria_id = request.GET.get('categoria')
-    usuario_id = request.GET.get('usuario')
+    def get_queryset(self):
+        queryset = Tarefas.objects.all()
+        categoria = self.request.query_params.get('categoria')
+        usuario = self.request.query_params.get('usuario')
 
-    tarefas = Tarefas.objects.all().order_by('titulo')
+        if categoria:
+            queryset = queryset.filter(categoria_id=categoria)
+        if usuario:
+            queryset = queryset.filter(usuario_id=usuario)
 
-    if categoria_id:
-        tarefas = tarefas.filter(categoria_id=categoria_id)
+        return queryset.order_by('titulo')
+    
 
-    if usuario_id:
-        tarefas = tarefas.filter(usuario_id=usuario_id)
+class CriarTarefaView(LoginRequiredMixin, CreateView):
+    model = Tarefas
+    form_class = FormularioTarefa
+    template_name = 'tarefas/criar_tarefa.html'
+    success_url = reverse_lazy('ver_tarefa')
 
-    categorias = Categoria.objects.all()
-    usuario = User.objects.all()
-    context = {
-        'tarefas': tarefas,
-        'categorias': categorias,
-        'usuario': usuario,
-        'categoria_selecionada': categoria_id,
-        'usuario_selecionado': usuario_id,
-    }
-    return render(request, 'tarefas/home_tarefa.html', context)
+    def form_valid(self, form):
+        form.instance.usuario = self.request.user
+        messages.success(self.request, "Tarefa criada com sucesso!")
+        return super().form_valid(form)
 
-@login_required
-def criar_tarefa(request):
-    if request.method == 'POST':
-        form = FormularioTarefa(request.POST)
-        if form.is_valid():
-            tarefa = form.save(commit=False)
-            tarefa.usuario = request.user
-            tarefa.save()
-            messages.success(request, "Tarefa criada com sucesso!")
-            return redirect(reverse('ver_tarefa'))
 
-    else:
-        form = FormularioTarefa()
+class ExcluirTarefaView(LoginRequiredMixin, DeleteView):
+    model = Tarefas
+    success_url = reverse_lazy('ver_tarefa')
 
-    return render(request, 'tarefas/criar_tarefa.html', {'form': form})
+    def get(self, request, *args, **kwargs):
+        obj = self.get_object
+        obj.delete()
+        messages.success(request, "Tarefa removida com sucesso!")
+        return super().delete(request, *args, **kwargs)
 
-@login_required
-def delete_tarefa(request, i):
-    task_tarefas = Tarefas.objects.get(id=i)
+class MostrarTarefasView(LoginRequiredMixin, ListView):
+    model = Tarefas
+    template_name = 'tarefas/home_tarefa.html'
+    context_object_name = 'tarefas'
+    ordering = ['titulo']
 
-    task_tarefas.delete()
-    messages.success(request, "Tarefa removida com sucesso!")
-    return redirect(reverse('ver_tarefa'))
+    def get_queryset(self):
+        queryset = Tarefas.objects.all()
+        categoria_id = self.request.GET.get('categoria')
+        usuario_id = self.request.GET.get('usuario')
+
+        if categoria_id:
+            queryset = queryset.filter(categoria_id=categoria_id)
+
+        if usuario_id:
+            queryset = queryset.filter(usuario_id=usuario_id)
+
+        return queryset.order_by('titulo')
+    
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['categorias'] = Categoria.objects.all()
+        context['usuarios'] = User.objects.all()
+        context['categoria_selecionada'] = self.request.GET.get('categoria')
+        context['usuario_selecionado'] = self.request.GET.get('usuario')
+        return context
+
+
 
 @login_required
 def update_tarefa(request, id):
