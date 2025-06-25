@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic.edit import CreateView, DeleteView
+from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from django.views.generic import ListView
 
 from rest_framework import viewsets
@@ -82,22 +82,14 @@ class MostrarTarefasView(LoginRequiredMixin, ListView):
         return context
 
 
+class AtualizarTarefaView(LoginRequiredMixin, UpdateView):
 
-@login_required
-def update_tarefa(request, id):
-    task_tarefas = get_object_or_404(Tarefas, id=id)
+    model = Tarefas
+    template_name = 'tarefas/editar_tarefa.html'
+    form_class = FormularioTarefa
+    success_url = reverse_lazy('ver_tarefa')
 
-    if request.method ==  'POST':
-        form = FormularioTarefa(request.POST, instance=task_tarefas)
-
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Tarefa atualizada com sucesso!")
-            return redirect('ver_tarefa')
-        
-    else:
-        form = FormularioTarefa(instance=task_tarefas)
-
-    return render(request, 'tarefas/editar_tarefa.html', {'form': form})
-
-
+    def form_valid(self, form):
+        messages.success(self.request, "Tarefa atualizada com sucesso!")
+        return super().form_valid(form)
+    
